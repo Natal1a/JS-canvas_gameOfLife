@@ -1,100 +1,77 @@
-function create2DArray(cols, rows) {
-  let arr = new Array(cols);
-  for (let i = 0; i < arr.length; i++) {
-    arr[i] = new Array(rows);
-  }
-  return arr;
-}
+let numberOfCells = 20;
+let canvasSize = 400;
+let cellSize = canvasSize / numberOfCells;
 
-let grid;
-let cols;
-let rows;
-let height = 400;
-let width = 400;
-let res = 40;
-
-function createGrid() {
-  createCanvas(height, width);
-
-
-  cols = height / res;
-  rows = width / res;
-
-  grid = create2DArray(cols, rows);
-  for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows; j++) {
+const getRandomGrid = () => {
+  let grid = new Array(numberOfCells);
+  for (let i = 0; i < grid.length; i++) {
+    grid[i] = new Array(numberOfCells);
+    for (let j = 0; j < grid.length; j++) {
       grid[i][j] = (Math.floor(Math.random() * 2));
     }
   }
-}
-createGrid();
-fillCells();
-
-function createCanvas(width, height) {
-  let canvas = document.createElement('canvas');
-
-  canvas.id = "CursorLayer";
-  canvas.width = width;
-  canvas.height = height;
-  canvas.style.zIndex = 8;
-  canvas.style.position = "absolute";
-  canvas.style.border = "1px solid";
-
-  var ctx = canvas.getContext("2d");
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  let body = document.getElementsByTagName("body")[0];
-  body.appendChild(canvas);
-
+  return grid;
 }
 
-function fillCells() {
-  for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows; j++) {
-      let x = i * res;
-      let y = j * res;
+const fillCells = (ctx, grid) => {
+  for (let i = 0; i < numberOfCells; i++) {
+    for (let j = 0; j < numberOfCells; j++) {
+      let x = i * cellSize;
+      let y = j * cellSize;
       if (grid[i][j] == 1) {
-        var canvas = document.querySelector('canvas');
-        var ctx = canvas.getContext('2d');
-        ctx.fillStyle = "white";
-        ctx.fillRect(x, y, res - 1, res - 1);
+        ctx.fillStyle = "#000";
+        ctx.fillRect(x, y, cellSize-1, cellSize-1);
       }
     }
   }
-
-  let next = create2DArray(rows, cols);
-  for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows; j++) {
-      let state = grid[i][j];
-      if (i == 0 || i == cols - 1 || j == 0 || j == rows - 1) {
-        next[i][j] = state;
-
-      } else {
-        let sum = 0;
-        let neighbours = countNeigbours(grid, i, j);
-        console.log(neighbours);
-        if (state == 0 && neighbours == 3) {
-          next[i][j] = 1;
-        } else if (state == 1 && (neighbours == 2 || neighbours == 3)) {
-          next[i][j] = 0;
-        } else {
-          next[i][j] = state;
-        }
-      }
-    }
-  }
-
-  grid = next;
 }
 
-function countNeigbours(grid, x, y) {
+const getNextGenerationGrid = (grid) => {
+  const nextGrid = new Array(grid.length);
+  for (let i = 0; i < grid.length; i++) {
+    nextGrid[i] = new Array(grid.length)
+    for (let j = 0; j < nextGrid[i].length; j++) {
+      const state = grid[i][j];
+      const neighbors = countNeigbors(grid, i, j);
+      if (state == 0 && neighbors == 3) {
+        nextGrid[i][j] = 1;
+      } else if (state == 1 && (neighbors < 2 || neighbors > 3)) {
+        nextGrid[i][j] = 0;
+      } else {
+        nextGrid[i][j] = state;
+      }
+    }
+  }
+  return nextGrid;
+}
+
+const countNeigbors = (grid, x, y) => {
   let sum = 0;
   for (let i = -1; i < 2; i++) {
     for (let j = -1; j < 2; j++) {
-      sum += grid[x + i][y + j];
+      let row = (i + x + grid.length) % grid.length;
+      let col = (j + y + grid.length) % grid.length;
+      sum += grid[row][col];
     }
   }
-  sum -= grid[i][j];
+  sum -= grid[x][y];
   return sum;
+}
+
+const generation = (ctx, grid) => {
+  ctx.clearRect(0, 0, canvasSize, canvasSize);
+  fillCells(ctx, grid);
+  const nextGenerationGrid = getNextGenerationGrid(grid);
+  setTimeout(() => {
+    requestAnimationFrame(() => generation(ctx, nextGenerationGrid));
+  }, 100);
 
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+  const canvas = document.querySelector("#canvas");
+  const ctx = canvas.getContext('2d');
+  const grid = getRandomGrid();
+  generation(ctx, grid);
+
+});
