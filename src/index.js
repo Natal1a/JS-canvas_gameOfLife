@@ -1,6 +1,7 @@
-let numberOfCells = 20;
-let canvasSize = 400;
-let cellSize = canvasSize / numberOfCells;
+let numberOfCells = 100;
+let canvasWidth = 800;
+let canvasHeight = 400;
+let cellSize = canvasWidth / numberOfCells;
 
 const getRandomGrid = () => {
   let grid = new Array(numberOfCells);
@@ -59,7 +60,7 @@ const countNeigbors = (grid, x, y) => {
 }
 
 const generation = (ctx, grid) => {
-  ctx.clearRect(0, 0, canvasSize, canvasSize);
+  ctx.clearRect(0, 0, canvasWidth, canvasHeight);
   fillCells(ctx, grid);
   const nextGenerationGrid = getNextGenerationGrid(grid);
   setTimeout(() => {
@@ -68,10 +69,16 @@ const generation = (ctx, grid) => {
 
 }
 
+const setCanvasSize = (canvasWidth, canvasHeight) => {
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
+}
+
 document.addEventListener("DOMContentLoaded", function() {
   const canvas = document.querySelector("#canvas");
+  setCanvasSize(canvasWidth, canvasHeight)
+
   const ctx = canvas.getContext('2d');
   const grid = getRandomGrid();
   generation(ctx, grid);
-
 });
